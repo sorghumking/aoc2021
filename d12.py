@@ -37,7 +37,7 @@ def p2(paths):
 # paths: node adjacency dict
 # cur_path: list of nodes in current path
 # completed: list of completed paths
-# cave_2x: str of small cave node that can be visited twice, or None if no cave can be visited twice.
+# cave_2x: str of small cave that can be visited twice, or None if no small cave can be visited twice.
 # If cave_2x is not None, only paths that visit cave_2x twice are considered valid.
 # Without this logic, given three small caves 'a','b','c', both explore(cave_2x='a')
 # and explore(cave_2x='b') would capture the routes that visit cave 'c' only once,
