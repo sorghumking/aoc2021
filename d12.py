@@ -20,7 +20,7 @@ def p1(paths):
     cur_path = []
     completed = []
     explore('start', paths, cur_path, completed)
-    print(f"Part 1: Found {len(completed)} paths")
+    return len(completed)
 
 def p2(paths):
     all_completed = []
@@ -30,22 +30,25 @@ def p2(paths):
         completed = []
         explore('start', paths, cur_path, completed, cave_2x=small_cave)
         all_completed += completed
-    # remove duplicate paths with set()
-    print(f"Part 2: Found {len(all_completed)} paths, {len(set(all_completed))} are unique.")
+    return len(all_completed)
 
 # Traverse nodes, capturing valid paths from start to end.
 # node: current node str
 # paths: node adjacency dict
 # cur_path: list of nodes in current path
 # completed: list of completed paths
-# cave_2x: str of small cave node that can be visited twice, or None if no cave can be visited twice
+# cave_2x: str of small cave node that can be visited twice, or None if no cave can be visited twice.
+# If cave_2x is not None, only paths that visit cave_2x twice are considered valid.
+# Without this logic, given three small caves 'a','b','c', both explore(cave_2x='a')
+# and explore(cave_2x='b') would capture the routes that visit cave 'c' only once,
+# leading to duplicate paths that must be culled.
 def explore(node, paths, cur_path, completed, cave_2x=None):
     cur_path.append(node)
     for dest_node in paths[node]:
         if dest_node == 'end':
-            # add path as tuple for eventual set() call; lists aren't hashable
-            valid_path = tuple(cur_path + ['end'])
-            completed.append(valid_path)
+            if cave_2x is None or (cave_2x is not None and len([n for n in cur_path if n == cave_2x]) == 2):
+                valid_path = cur_path + ['end']
+                completed.append(valid_path)
             continue
         elif dest_node[0].islower():
             if cave_2x is not None and dest_node == cave_2x:
@@ -58,5 +61,8 @@ def explore(node, paths, cur_path, completed, cave_2x=None):
 
 if __name__ == "__main__":
     paths = parse_input("inputs/d12.txt")
-    p1(paths)
-    p2(paths)
+    p1_count = p1(paths)
+    print(f"Part 1: Found {p1_count} paths that visit small caves 0-1x.")
+    p2_count = p2(paths)
+    print(f"Part 2: Found {p2_count} paths that visit one small cave exactly 2x.")
+    print(f"Part 2 answer = P1 + P2 = {p1_count + p2_count}.")
