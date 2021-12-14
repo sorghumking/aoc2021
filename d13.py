@@ -21,22 +21,22 @@ def parse_input(inputfile):
 def do_folds(_dots, folds):
     dots = _dots.copy()
     for axis, val in folds:
-        new_dots = []
         if axis == 'y':
-            unmoved_dots = [dot for dot in dots if dot[1] < val]
-            for d in [dot for dot in dots if dot[1] > val]:
-                diff = abs(d[1] - val) * 2
-                folded_dot = (d[0], d[1] - diff)
-                new_dots.append(folded_dot)
-        else: # x-axis
-            unmoved_dots = [dot for dot in dots if dot[0] < val]
-            for d in [dot for dot in dots if dot[0] > val]:
-                diff = abs(d[0] - val) * 2
-                folded_dot = (d[0] - diff, d[1])
-                new_dots.append(folded_dot)
-        dots = new_dots + unmoved_dots
+            unmoved_dots = [(x,y) for x,y in dots if y < val]
+            dots_to_fold = [(x,y) for x,y in dots if y > val]
+        else:
+            unmoved_dots = [(x,y) for x,y in dots if x < val]
+            dots_to_fold = [(x,y) for x,y in dots if x > val]
+
+        folded_dots = [fold_dot(d[0], d[1], axis, val) for d in dots_to_fold]
+        dots = folded_dots + unmoved_dots
         dots = list(set(dots)) # cull duplicates
     return dots
+
+def fold_dot(x, y, axis, val):
+    coord_to_fold = x if axis == 'x' else y
+    coord_to_fold -= abs(coord_to_fold - val) * 2
+    return (coord_to_fold, y) if axis == 'x' else (x, coord_to_fold)
 
 def print_paper(dots, width, height):
     for y in range(0, height):
