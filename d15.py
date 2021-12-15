@@ -5,29 +5,45 @@ def parse_input(inputfile):
             grid.append([int(c) for c in l.strip()])
     return grid
 
-def p1(grid):
-    grid_wid = len(grid[0])
-    path = []
-    risks = []
-    walk_grid((0,0), grid, grid_wid, path, risks)
-    print(f"{len(risks)} paths walked, lowest risk = {min(risks)}.")
+# I am too dumb to derive Dijkstra's Algorithm myself.
+# God bless Reddit and Wikipedia.
+def dijkstra(grid, start_pos, end_pos):
+    verts = set()
+    dists = {}
+    prevs = {}
 
-def walk_grid(pos, grid, grid_wid, path, risks):
-    path.append(pos)
-    if pos == (grid_wid-1, grid_wid-1): # reached lower-right corner
-        path_risk = sum([grid[y][x] for x,y in path[1:]]) # skip first pos
-        risks.append(path_risk)
-    else:
-        deltas = []
-        if pos[0] + 1 < grid_wid:
-            deltas.append((pos[0]+1, pos[1]))
-        if pos[1] + 1 < grid_wid:
-            deltas.append((pos[0], pos[1]+1))
-        for d in deltas:
-            walk_grid(d, grid, grid_wid, path, risks)
-    path.pop()
+    for y in range(len(grid[0])):
+        for x in range(len(grid[0])):
+            dists[(x,y)] = float('inf') # infinity
+            prevs[(x,y)] = None
+            verts.add((x,y))
+    dists[start_pos] = 0
+    
+    grid_wid = len(grid[0])
+    while len(verts) > 0:
+        v = min(verts, key=lambda v:dists[v])
+        verts.remove(v)
+        if v == end_pos:
+            break
+        for pt in get_adjacent(v[0], v[1], grid_wid):
+            if pt in verts:
+                new_dist = dists[v] + grid[pt[1]][pt[0]]
+                if new_dist < dists[pt]:
+                    dists[pt] = new_dist
+                    prevs[pt] = v
+    return dists, prevs
+
+def get_adjacent(x, y, grid_wid):
+    deltas = [(0,1),(0,-1),(1,0),(-1,0)]
+    candidates = [(x+dx,y+dy) for dx,dy in deltas] # orthogonally adjacent points
+    return [pt for pt in candidates if pt[0] >= 0 and pt[0] < grid_wid and pt[1] >= 0 and pt[1] < grid_wid]
+
+def p1_dijkstra(grid):
+    end_point = (99,99)
+    dists, prevs = dijkstra(grid, (0,0), end_point)
+    print(f"Distance = {dists[end_point]}")
+
 
 if __name__ == "__main__":
-    grid = parse_input("inputs/d15ex.txt")
-    p1(grid)
-    # p2(tmpl, rules, 40)
+    grid = parse_input("inputs/d15.txt")
+    p1_dijkstra(grid)
