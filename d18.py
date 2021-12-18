@@ -1,4 +1,12 @@
+import math
 import unittest
+
+def parse_input(inputfile):
+    numbers = []
+    with open(inputfile) as f:
+        for line in f.readlines():
+            numbers.append(eval(line.strip()))
+    return numbers
 
 class Node:
     def __init__(self, l, r, parent=None):
@@ -68,6 +76,8 @@ def find_left(node):
         p = p.parent
     return None
 
+# node: exploded node
+# Find node to which we'll add exploded right value.
 def find_right(node):
     p = node.parent
     cur_node = node
@@ -84,6 +94,7 @@ def find_right(node):
         p = p.parent
     return None
 
+# Explode node.
 def explode(node):
     assert type(node.l) == int and type(node.r) == int
     lval, rval = node.l, node.r
@@ -105,11 +116,14 @@ def explode(node):
     else:
         parent.r = 0
 
+# If any value >= 10 split leftmost value and return True, else False.
 def split(node):
     for n in [node.l, node.r]:
         if type(n) == int:
             if n >= 10:
-                newl, newr = n // 2, n // 2 + 1
+                # print(f"Splitting {n} of {node}")
+                # newl, newr = n // 2, n // 2 + 1
+                newl, newr = math.floor(n/2), math.ceil(n/2)
                 if n == node.l:
                     node.l = Node(newl, newr, node)
                 elif n == node.r:
@@ -120,10 +134,51 @@ def split(node):
                 return True
     return False
 
+# Add node and new_node, return new root
+def add(node, new_node):
+    new_root = Node(node, new_node)
+    node.parent = new_root
+    new_node.parent = new_root
+    return new_root
 
+# Explode and split tree until fully reduced.
+def reduce(tree):
+    while True:
+        node = find_explode(tree)
+        if node is not None:
+            # print(f"Exploding {node}")
+            explode(node)
+            continue
+        result = split(tree)
+        if result:
+            continue
+        break
 
+# Return magnitude of tree.
+def magnitude(tree):
+    if type(tree.l) == int and type(tree.r) == int:
+        return 3*tree.l + 2*tree.r
+    elif type(tree.l) == int:
+        return 3*tree.l + 2*magnitude(tree.r)
+    elif type(tree.r) == int:
+        return 3*magnitude(tree.l) + 2*tree.r
+    return 3*magnitude(tree.l) + 2*magnitude(tree.r)
+    
+def p1(snailfish_numbers):
+    tree = create_tree(snailfish_numbers[0])
+    # print(f"Starting tree: {dump(tree)}")
+    for num in snailfish_numbers[1:]:
+        tree_to_add = create_tree(num)
+        tree = add(tree, tree_to_add)
+        # print(f"After adding: {dump(tree)}")
+        reduce(tree)
+        # break
+    print(f"Fully reduced sum: {dump(tree)}")
+    print(f"Part 1: Magnitude = {magnitude(tree)}")
+
+# Tests, so useful!
 class ExplodeTests(unittest.TestCase):
-    def test_find_explode(self): # find next pair to explode
+    def test_find_explode(self):
         tests = [
             ([[[[[9,8],1],2],3],4], [9,8]),
             ([7,[6,[5,[4,[3,2]]]]], [3,2]),
@@ -161,20 +216,40 @@ class ExplodeTests(unittest.TestCase):
             split(tree)
             self.assertEqual(dump(tree), expected)
 
-if __name__ == "__main__":
-    unittest.main()
-    # tree = create_tree([[[[0,7],4],[15,[0,13]]],[1,1]])
-    # split(tree)
-    # print(dump(tree))
-    # root = create_tree([[[[[9,8],1],2],3],4])
-    # ex = find_explode(root)
-    # explode(ex)
-    # print(dump(root))
+    def test_add(self):
+        tests = [
+            ([[[[4,3],4],4],[7,[[8,4],9]]], [1,1], [[[[[4,3],4],4],[7,[[8,4],9]]],[1,1]])
+        ]
+        for t, addend, expected in tests:
+            tree = create_tree(t)
+            new_tree = create_tree(addend)
+            new_root = add(tree, new_tree)
+            self.assertEqual(dump(new_root), expected)
 
-    # print(root == root)
-    # print(root == parse([[[[9,8],1],2],3]))
-    # link(root, depth=0)
-    # ex = find_explode(root, depth=0)
-    # print(dump(ex))
-    # result = dump(root)
-    # print(result)
+    def test_reduce(self):
+        tests = [
+            ([[[[[4,3],4],4],[7,[[8,4],9]]],[1,1]], [[[[0,7],4],[[7,8],[6,0]]],[8,1]])
+        ]
+        for t, expected in tests:
+            tree = create_tree(t)
+            reduce(tree)
+            self.assertEqual(dump(tree), expected)
+
+    def test_magnitude(self):
+        tests = [
+            ([[9,1],[1,9]], 129),
+            ([[1,2],[[3,4],5]], 143),
+            ([[[[0,7],4],[[7,8],[6,0]]],[8,1]], 1384),
+            ([[[[1,1],[2,2]],[3,3]],[4,4]], 445),
+            ([[[[3,0],[5,3]],[4,4]],[5,5]], 791),
+            ([[[[5,0],[7,4]],[5,5]],[6,6]], 1137),
+            ([[[[8,7],[7,7]],[[8,6],[7,7]]],[[[0,7],[6,6]],[8,7]]], 3488)
+        ]
+        for t, expected in tests:
+            tree = create_tree(t)
+            self.assertEqual(magnitude(tree), expected)
+
+if __name__ == "__main__":
+    # unittest.main()
+    snailfish_numbers = parse_input("inputs/d18.txt")
+    p1(snailfish_numbers)
