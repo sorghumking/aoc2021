@@ -1,23 +1,26 @@
 from dataclasses import dataclass
 
-def make_rocket_go_now(area, steps):
+def make_rocket_go_now(area, steps, batch_size):
     valid_dx = find_valid_x_trajs(area)
     print(f"Found {len(valid_dx)} valid x trajectories.")
     count = 0
-    batch_size = 100
+    valid_trajs = []
     max_y = 0
+    minimum_dy = area.ymin-1 # lowest dy that could hit target
     while count < steps:
-        dy_min, dy_max = count*batch_size+1, (count+1)*batch_size+1
+        dy_min, dy_max = minimum_dy + (count * batch_size + 1), minimum_dy + ((count + 1) * batch_size + 1)
         print(f"Trying y trajectories {dy_min}-{dy_max}...")
         valid_dy = find_valid_y_trajs(area, dy_min, dy_max)
         for dx in valid_dx:
             for dy in valid_dy:
                 hit, highest_y = fire(dx, dy, area)
+                if hit:
+                    valid_trajs.append((dx,dy))
                 if hit and highest_y > max_y:
-                    print(f"New high {highest_y} with trajectory ({dx},{dy})")
+                    # print(f"New high {highest_y} with trajectory ({dx},{dy})")
                     max_y = highest_y
         count += 1
-    return max_y
+    return max_y, valid_trajs
 
 # Will trajectory dx, dy hit area? Also returns highest y for dx, dy.
 def fire(_dx, _dy, area):
@@ -83,5 +86,6 @@ if __name__ == "__main__":
     # area = Area(20, 30, -10, -5)
     area = Area(29, 73, -248, -194)
     steps = 20
-    max_y = make_rocket_go_now(area, steps)
+    max_y, valid_trajs = make_rocket_go_now(area, steps, batch_size=100)
     print(f"Part 1: After {steps} steps, Highest y = {max_y}.")
+    print(f"Part 2: {len(set(valid_trajs))} trajectories hit the target.")
