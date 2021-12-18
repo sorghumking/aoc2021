@@ -121,8 +121,6 @@ def split(node):
     for n in [node.l, node.r]:
         if type(n) == int:
             if n >= 10:
-                # print(f"Splitting {n} of {node}")
-                # newl, newr = n // 2, n // 2 + 1
                 newl, newr = math.floor(n/2), math.ceil(n/2)
                 if n == node.l:
                     node.l = Node(newl, newr, node)
@@ -146,7 +144,6 @@ def reduce(tree):
     while True:
         node = find_explode(tree)
         if node is not None:
-            # print(f"Exploding {node}")
             explode(node)
             continue
         result = split(tree)
@@ -166,15 +163,47 @@ def magnitude(tree):
     
 def p1(snailfish_numbers):
     tree = create_tree(snailfish_numbers[0])
-    # print(f"Starting tree: {dump(tree)}")
     for num in snailfish_numbers[1:]:
         tree_to_add = create_tree(num)
         tree = add(tree, tree_to_add)
-        # print(f"After adding: {dump(tree)}")
         reduce(tree)
-        # break
     print(f"Fully reduced sum: {dump(tree)}")
     print(f"Part 1: Magnitude = {magnitude(tree)}")
+
+def magnitude_of_two(num1, num2):
+    add1 = create_tree(num1)
+    add2 = create_tree(num2)
+    tree = add(add1, add2)
+    reduce(tree)
+    return magnitude(tree)
+
+def p2(snailfish_numbers):
+    seen = []
+    max_magnitude = 0
+    for idx1, num1 in enumerate(snailfish_numbers):
+        for idx2, num2 in enumerate(snailfish_numbers):
+            if idx1 == idx2:
+                continue # don't add same number
+
+            # first number + second number
+            if (idx1, idx2) in seen:
+                continue
+            else:
+                seen.append((idx1,idx2))
+            mag = magnitude_of_two(num1, num2)
+            if mag > max_magnitude:
+                max_magnitude = mag
+            
+            # second number + first number
+            if (idx2, idx1) not in seen:
+                continue
+            else:
+                seen.append((idx2, idx1))
+            mag = magnitude_of_two(num2, num1)
+            if mag > max_magnitude:
+                max_magnitude = mag
+    print(f"Part 2: max magnitude for any pair is {max_magnitude}")
+
 
 # Tests, so useful!
 class ExplodeTests(unittest.TestCase):
@@ -243,7 +272,8 @@ class ExplodeTests(unittest.TestCase):
             ([[[[1,1],[2,2]],[3,3]],[4,4]], 445),
             ([[[[3,0],[5,3]],[4,4]],[5,5]], 791),
             ([[[[5,0],[7,4]],[5,5]],[6,6]], 1137),
-            ([[[[8,7],[7,7]],[[8,6],[7,7]]],[[[0,7],[6,6]],[8,7]]], 3488)
+            ([[[[8,7],[7,7]],[[8,6],[7,7]]],[[[0,7],[6,6]],[8,7]]], 3488),
+            ([[[[7,8],[6,6]],[[6,0],[7,7]]],[[[7,8],[8,8]],[[7,9],[0,6]]]], 3993)
         ]
         for t, expected in tests:
             tree = create_tree(t)
@@ -253,3 +283,4 @@ if __name__ == "__main__":
     # unittest.main()
     snailfish_numbers = parse_input("inputs/d18.txt")
     p1(snailfish_numbers)
+    p2(snailfish_numbers)
