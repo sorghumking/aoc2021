@@ -42,7 +42,7 @@ def dump(node):
 # find next node to explode
 def find_explode(node, depth=0):
     if type(node) == Node:
-        if type(node.l) == int and type(node.r) == int and depth+1 >= 4:
+        if type(node.l) == int and type(node.r) == int and depth+1 > 4:
             return node
         for n in [node.l, node.r]:
             result = find_explode(n, depth+1)
@@ -104,7 +104,7 @@ def explode(node):
         parent.l = 0
     else:
         parent.r = 0
-            
+
 
 class ExplodeTests(unittest.TestCase):
     def test_find_explode(self): # find next pair to explode
@@ -118,7 +118,7 @@ class ExplodeTests(unittest.TestCase):
         for t, expected in tests:
             tree = create_tree(t)
             node = find_explode(tree, depth=0)
-            self.assertTrue(dump(node), expected)
+            self.assertEqual(dump(node), expected)
 
     def test_explode(self):
         tests = [
@@ -132,7 +132,19 @@ class ExplodeTests(unittest.TestCase):
             tree = create_tree(t)
             node = find_explode(tree)
             explode(node)
-            self.assertTrue(dump(node), expected)
+            # print(dump(node))
+            print(f"Expected: {expected}, actual: {dump(tree)}")
+            self.assertEqual(dump(tree), expected)
+
+    # def test_split(self):
+    #     tests = [
+    #         ([[[[0,7],4],[15,[0,13]]],[1,1]], [[[[0,7],4],[[7,8],[0,13]]],[1,1]]),
+    #         ([[[[0,7],4],[[7,8],[0,13]]],[1,1]], [[[[0,7],4],[[7,8],[0,[6,7]]]],[1,1]])
+    #     ]
+    #     for t, expected in tests:
+    #         tree = create_tree(t)
+    #         split(tree)
+    #         self.assertTrue(dump(tree), expected)
 
 if __name__ == "__main__":
     unittest.main()
