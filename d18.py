@@ -105,6 +105,22 @@ def explode(node):
     else:
         parent.r = 0
 
+def split(node):
+    for n in [node.l, node.r]:
+        if type(n) == int:
+            if n >= 10:
+                newl, newr = n // 2, n // 2 + 1
+                if n == node.l:
+                    node.l = Node(newl, newr, node)
+                elif n == node.r:
+                    node.r = Node(newl, newr, node)
+                return True
+        else:
+            if split(n):
+                return True
+    return False
+
+
 
 class ExplodeTests(unittest.TestCase):
     def test_find_explode(self): # find next pair to explode
@@ -132,22 +148,24 @@ class ExplodeTests(unittest.TestCase):
             tree = create_tree(t)
             node = find_explode(tree)
             explode(node)
-            # print(dump(node))
-            print(f"Expected: {expected}, actual: {dump(tree)}")
             self.assertEqual(dump(tree), expected)
 
-    # def test_split(self):
-    #     tests = [
-    #         ([[[[0,7],4],[15,[0,13]]],[1,1]], [[[[0,7],4],[[7,8],[0,13]]],[1,1]]),
-    #         ([[[[0,7],4],[[7,8],[0,13]]],[1,1]], [[[[0,7],4],[[7,8],[0,[6,7]]]],[1,1]])
-    #     ]
-    #     for t, expected in tests:
-    #         tree = create_tree(t)
-    #         split(tree)
-    #         self.assertTrue(dump(tree), expected)
+    def test_split(self):
+        tests = [
+            ([[[[0,7],4],[15,[0,13]]],[1,1]], [[[[0,7],4],[[7,8],[0,13]]],[1,1]]),
+            ([[[[0,7],4],[[7,8],[0,13]]],[1,1]], [[[[0,7],4],[[7,8],[0,[6,7]]]],[1,1]]),
+            ([[[[0,7],4],[[7,8],[6,0]]],[8,1]], [[[[0,7],4],[[7,8],[6,0]]],[8,1]]) # no split for this input
+        ]
+        for t, expected in tests:
+            tree = create_tree(t)
+            split(tree)
+            self.assertEqual(dump(tree), expected)
 
 if __name__ == "__main__":
     unittest.main()
+    # tree = create_tree([[[[0,7],4],[15,[0,13]]],[1,1]])
+    # split(tree)
+    # print(dump(tree))
     # root = create_tree([[[[[9,8],1],2],3],4])
     # ex = find_explode(root)
     # explode(ex)
